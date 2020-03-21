@@ -1,0 +1,4 @@
+displayName = TutorialMod
+author = NewbieModder
+version = 0.1
+includePDB = true
