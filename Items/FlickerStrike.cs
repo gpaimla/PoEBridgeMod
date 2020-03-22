@@ -42,13 +42,14 @@ namespace PoEBridgeMod.Items
 		public override bool UseItem(Player player)
 		{
 			Item itemToFlickerWith = player.inventory[0];
+			itemToFlickerWith.noMelee = true; // no meele hitbox
 			if (itemToFlickerWith.melee) { 
-				if (!this.timeFromLastTeleport.IsRunning || this.timeFromLastTeleport.ElapsedMilliseconds > (2*(itemToFlickerWith.useTime)*3)) {
+				if (!this.timeFromLastTeleport.IsRunning || this.timeFromLastTeleport.ElapsedMilliseconds > (itemToFlickerWith.useTime)*16) {
 					this.timeFromLastTeleport.Restart();
 					float distanceToTarget = 300f;
 					bool target = false;
 					NPC targetNPC = new NPC();
-					Vector2 targetCenter = player.position;
+					Vector2 targetPosition = player.position;
 					for (int i = 0; i < Main.maxNPCs; i++)
 					{
 						NPC npc = Main.npc[i];
@@ -59,7 +60,12 @@ namespace PoEBridgeMod.Items
 							if (((target && between > distanceToTarget && inRange) || !target && inRange) && (lineOfSight))
 							{
 								distanceToTarget = between;
-								targetCenter = npc.position;
+								int npcHeight = (npc.height / 2);
+								if(npcHeight > player.height){
+									targetPosition = npc.Center;
+								}else{
+									targetPosition = npc.Center - new Vector2(0, player.height);
+								}
 								target = true;
 								targetNPC = npc;
 							}
@@ -68,11 +74,11 @@ namespace PoEBridgeMod.Items
 
 					if (target)
 					{
-						player.Teleport(targetCenter);
+						player.Teleport(targetPosition);
 						int damageToDeal = itemToFlickerWith.damage;
 						int critChance = Main.player[Main.myPlayer].meleeCrit - Main.player[Main.myPlayer].inventory[Main.player[Main.myPlayer].selectedItem].crit + itemToFlickerWith.crit;
-						ItemLoader.GetWeaponCrit(Main.HoverItem, player, ref critChance);
-						PlayerHooks.GetWeaponCrit(player, Main.HoverItem, ref critChance);
+						float num = damageToDeal * (1f + (float)Main.rand.Next(-15, 16) * 0.01f);
+						damageToDeal = (int)Math.Round((double)num);
 						bool crit = false;
 						if ((float)Main.rand.Next(1, 101) <= critChance)
 						{
@@ -83,8 +89,14 @@ namespace PoEBridgeMod.Items
 						{
 							player.addDPS(damageToDeal);
 						}
-
+						player.immuneTime = 50;
+						player.selectedItem = 0;
+						int itemToFlickerWithManaDrain = itemToFlickerWith.mana;
+						itemToFlickerWith.mana = 3; // drain player mana
+						player.ItemCheck(0); // get projs
+						player.selectedItem = 1;
 						player.ApplyDamageToNPC(targetNPC, damageToDeal, 0, player.direction, crit);
+						itemToFlickerWith.mana = itemToFlickerWithManaDrain;
 						return true;
 					}
 				}
