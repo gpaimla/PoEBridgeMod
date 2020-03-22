@@ -59,7 +59,7 @@ namespace PoEBridgeMod.Items
 							if (((target && between > distanceToTarget && inRange) || !target && inRange) && (lineOfSight))
 							{
 								distanceToTarget = between;
-								targetCenter = npc.Center;
+								targetCenter = npc.position;
 								target = true;
 								targetNPC = npc;
 							}
@@ -68,12 +68,23 @@ namespace PoEBridgeMod.Items
 
 					if (target)
 					{
-						
-						player.Center = targetCenter;
+						player.Teleport(targetCenter);
 						int damageToDeal = itemToFlickerWith.damage;
-						player.ApplyDamageToNPC(targetNPC, damageToDeal, 0, player.direction, false);
-						player.addDPS(damageToDeal);
-						targetNPC.StrikeNPC(itemToFlickerWith.damage, 0, player.direction);
+						int critChance = Main.player[Main.myPlayer].meleeCrit - Main.player[Main.myPlayer].inventory[Main.player[Main.myPlayer].selectedItem].crit + itemToFlickerWith.crit;
+						ItemLoader.GetWeaponCrit(Main.HoverItem, player, ref critChance);
+						PlayerHooks.GetWeaponCrit(player, Main.HoverItem, ref critChance);
+						bool crit = false;
+						if ((float)Main.rand.Next(1, 101) <= critChance)
+						{
+							crit = true;
+							player.addDPS(damageToDeal * 2);
+						}
+						else
+						{
+							player.addDPS(damageToDeal);
+						}
+
+						player.ApplyDamageToNPC(targetNPC, damageToDeal, 0, player.direction, crit);
 						return true;
 					}
 				}
