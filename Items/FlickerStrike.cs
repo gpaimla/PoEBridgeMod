@@ -96,7 +96,8 @@ namespace PoEBridgeMod.Items
 						itemToFlickerWith.mana = 10; // drain player mana
 						player.ItemCheck(0); // get projs
 						player.selectedItem = 1;
-						targetNPC.StrikeNPC(damageToDeal, 0, player.direction, crit);
+						// applydamageToNpc syncs in multiplayer automatically, strikeNpc doesnt
+						player.ApplyDamageToNPC(targetNPC, damageToDeal, 0, player.direction, crit);
 						itemToFlickerWith.mana = itemToFlickerWithManaDrain;
 						itemToFlickerWith.noMelee = false;
 						return true;
