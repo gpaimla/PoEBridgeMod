@@ -11,7 +11,7 @@ using Terraria.Utilities;
 namespace PoEBridgeMod.Items
 {
     class RighteousFire : ModItem
-    {
+	{
 		public override void SetStaticDefaults()
 		{
 			Tooltip.SetDefault("feel the Bern");

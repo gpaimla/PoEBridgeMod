@@ -17,36 +17,15 @@ namespace PoEBridgeMod
     class PoEBridgeModPlayer : ModPlayer
     {
         public bool RighteousFire;
-		public float rotation = MathHelper.TwoPi;
+
+		public string oldName = null;
 		// ResetEffects is used to reset effects back to their default value. Terraria resets all effects every frame back to defaults so we will follow this design. 
 		// (You might think to set a variable when an item is equipped and unassign the value when the item in unequipped, but Terraria is not designed that way.)
 		public override void ResetEffects()
 		{
 			RighteousFire = false;
 		}
-		public static readonly PlayerLayer AccLayer = new PlayerLayer("PoEBridgeModPlayer", "AccLayer", PlayerLayer.MiscEffectsBack, delegate (PlayerDrawInfo drawInfo) {
-			if (drawInfo.shadow != 0f)
-			{
-				return;
-			}
-			Player drawPlayer = drawInfo.drawPlayer;
-			Mod mod = ModLoader.GetMod("PoEBridgeMod");
-			PoEBridgeModPlayer modPlayer = drawPlayer.GetModPlayer<PoEBridgeModPlayer>();
-			if (modPlayer.RighteousFire)
-			{
-				Texture2D texture = mod.GetTexture("Items/Celestial_Righteous_fire");
-				int drawX = (int)(drawInfo.position.X + drawPlayer.width / 2f - Main.screenPosition.X);
-				int drawY = (int)(drawInfo.position.Y - 4f - Main.screenPosition.Y);
-				DrawData data = new DrawData(texture, new Vector2(drawX, drawY+20), null, Lighting.GetColor((int)((drawInfo.position.X + drawPlayer.width / 2f) / 16f), (int)((drawInfo.position.Y - 4f - texture.Height / 2f) / 16f)), modPlayer.rotation, new Vector2(texture.Width / 2f, texture.Height/2f), 1f, SpriteEffects.None, 0);
-				Main.playerDrawData.Add(data);
-			}
-		});
-		public override void ModifyDrawLayers(List<PlayerLayer> layers)
-		{
-			AccLayer.visible = true;
-			this.rotation += 0.1f;
-			layers.Add(AccLayer);
-		}
+
 		public override void PreUpdate()
 		{
 

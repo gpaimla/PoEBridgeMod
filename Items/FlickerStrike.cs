@@ -13,7 +13,7 @@ namespace PoEBridgeMod.Items
 		Stopwatch timeFromLastTeleport = new Stopwatch();
 		public override void SetStaticDefaults()
 		{
-			Tooltip.SetDefault("Meele damage");
+			Tooltip.SetDefault("Uses weapon in inventory slot 1 to flicker strike");
 		}
 
 		public override void SetDefaults()
@@ -24,8 +24,8 @@ namespace PoEBridgeMod.Items
 			item.noMelee = true;
 			item.useStyle = 4; // holding up
 			item.knockBack = 0;
-			item.value = 10000;
-			item.rare = 2;
+			item.value = Item.sellPrice(silver: 90);
+			item.rare = ItemRarityID.Green;
 			// item.shoot = ModContent.ProjectileType<FlickerWeaponProj>();
 			item.channel = true;
 			item.autoReuse = true;
