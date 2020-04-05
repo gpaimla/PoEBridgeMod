@@ -121,7 +121,7 @@ namespace PoEBridgeMod.NPCs
 
 		public override void SetChatButtons(ref string button, ref string button2)
 		{
-			button = Language.GetTextValue("LegacyInterface.28");
+			button = "Identify item";
 			button2 = "Infuse Gem";
 		}
 
@@ -129,7 +129,9 @@ namespace PoEBridgeMod.NPCs
 		{
 			if (firstButton)
 			{
-				shop = true;
+				Main.playerInventory = true;
+				Main.npcChatText = "";
+				GetInstance<PoEBridgeMod>().ClarissaUserInterface.SetState(new UI.ClarissaUIIdentify());
 			}
 			else
 			{

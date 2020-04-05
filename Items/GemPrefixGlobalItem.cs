@@ -15,18 +15,40 @@ namespace PoEBridgeMod.Items
 	{
 		public string originalOwner;
 		public string prefixType;
+		public int socketNumber;
 		public GemPrefixGlobalItem()
 		{
 			originalOwner = "";
+			prefixType = "";
+			socketNumber = 0;
 		}
 
 		public override bool InstancePerEntity => true;
 		public bool didIShoot = false;
+		public override bool NeedsSaving(Item item)
+		{
+			return prefixType.Length > 0 || prefixType.Length > 0 || socketNumber > 0;
+		}
+		public override TagCompound Save(Item item)
+		{
+			return new TagCompound {
+				{"originalOwner", originalOwner},
+				{"prefixType", prefixType},
+				{"socketNumber", socketNumber},
+			};
+		}
+		public override void Load(Item item, TagCompound tag)
+		{
+			originalOwner = tag.GetString("originalOwner");
+			prefixType = tag.GetString("prefixType");
+			socketNumber = tag.GetInt("socketNumber");
+		}
 		public override GlobalItem Clone(Item item, Item itemClone)
 		{
 			GemPrefixGlobalItem myClone = (GemPrefixGlobalItem)base.Clone(item, itemClone);
 			myClone.originalOwner = originalOwner;
 			myClone.prefixType = prefixType;
+			myClone.socketNumber = socketNumber;
 			return myClone;
 		}
 
@@ -35,11 +57,19 @@ namespace PoEBridgeMod.Items
 			// TODO
 			if (!item.social && item.prefix > 0)
 			{
-					TooltipLine line = new TooltipLine(mod, "PrefixTornadoShot", "Tornado Shot")
+				if(socketNumber > 0) { 
+					TooltipLine line = new TooltipLine(mod, "Sockets", "Sockets: " + socketNumber)
 					{
-						isModifier = true
+						overrideColor = Color.LimeGreen	
+					
 					};
 					tooltips.Add(line);
+				}
+				TooltipLine line2 = new TooltipLine(mod, "TornadoShot", "Prefixes: " + prefixType)
+				{
+					overrideColor = Color.LimeGreen
+				};
+				tooltips.Add(line2);
 			}
 			if (originalOwner.Length > 0)
 			{
@@ -48,14 +78,6 @@ namespace PoEBridgeMod.Items
 					overrideColor = Color.LimeGreen
 				};
 				tooltips.Add(line);
-
-				/*foreach (TooltipLine line2 in tooltips)
-				{
-					if (line2.mod == "Terraria" && line2.Name == "ItemName")
-					{
-						line2.text = originalOwner + "'s " + line2.text;
-					}
-				}*/
 			}
 
 			foreach (TooltipLine line3 in tooltips)

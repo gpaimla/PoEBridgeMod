@@ -1,26 +1,23 @@
 ﻿using PoEBridgeMod.Items;
 using Terraria;
 using Terraria.ModLoader;
+using Microsoft.Xna.Framework;
+using PoEBridgeMod.Projectiles;
+using static Terraria.ModLoader.ModContent;
 
 namespace PoEBridgeMod.Prefixes
 {
-    class TestMeelePrefix : ModPrefix, IMeelePrefix
-	{
-
+    class SocketPrefix : ModPrefix
+    {
+		public SocketPrefix()
+		{
+		}
 		// determines if it can roll at all.
 		// use this to control if a prefixes can be rolled or not
 		public override bool CanRoll(Item item)
 			=> false;
-
-		// change your category this way, defaults to Custom
 		public override PrefixCategory Category
-			=> PrefixCategory.Melee;
-
-		public TestMeelePrefix()
-		{
-		}
-
-		// Allow multiple prefix autoloading this way (permutations of the same prefix)
+		=> PrefixCategory.AnyWeapon;
 		public override bool Autoload(ref string name)
 		{
 			if (!base.Autoload(ref name))
@@ -28,12 +25,11 @@ namespace PoEBridgeMod.Prefixes
 				return false;
 			}
 
-			mod.AddPrefix("TestMeele", new TestMeelePrefix());
+			mod.AddPrefix("Sockets", new SocketPrefix());
 			return false;
 		}
 
 		public override void Apply(Item item)
-			=> item.GetGlobalItem<GemPrefixGlobalItem>().prefixType = "TestMeele";
-
+			=> item.GetGlobalItem<GemPrefixGlobalItem>().socketNumber = 5;
 	}
 }

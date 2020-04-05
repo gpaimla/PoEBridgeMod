@@ -13,6 +13,9 @@ namespace PoEBridgeMod.Prefixes
 		{
 		}
 
+		public override bool CanRoll(Item item)
+			=> false;
+
 		public override bool Autoload(ref string name)
 		{
 			if (!base.Autoload(ref name))

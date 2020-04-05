@@ -11,13 +11,11 @@ using Terraria.UI.Chat;
 using PoEBridgeMod.Items;
 using static Terraria.ModLoader.ModContent;
 
-
 namespace PoEBridgeMod.UI
 {
-    internal class ClarissaUI : UIState
-	{
-		private VanillaItemSlotWrapper _vanillaItemSlot;
-		private VanillaItemSlotWrapper _gemItemSlot;
+    internal class ClarissaUIIdentify : UIState
+    {
+        private VanillaItemSlotWrapper _vanillaItemSlot;
 		public override void OnInitialize()
 		{
 			_vanillaItemSlot = new VanillaItemSlotWrapper(ItemSlot.Context.BankItem, 0.85f)
@@ -26,43 +24,21 @@ namespace PoEBridgeMod.UI
 				Top = { Pixels = 270 },
 				ValidItemFunc = item => item.IsAir || !item.IsAir && item.Prefix(-3)
 			};
-			_gemItemSlot = new VanillaItemSlotWrapper(ItemSlot.Context.BankItem, 0.85f)
-			{
-				Left = { Pixels = 50 },
-				Top = { Pixels = 330 },
-				ValidItemFunc = item => item.IsAir || !item.IsAir && item.modItem is IPoeBridgeModGem
-			};
-			// Here we limit the items that can be placed in the slot. We are fine with placing an empty item in or a non-empty item that can be prefixed. Calling Prefix(-3) is the way to know if the item in question can take a prefix or not.
 			Append(_vanillaItemSlot);
-			Append(_gemItemSlot);
 		}
-
-		// OnDeactivate is called when the UserInterface switches to a different state. In this mod, we switch between no state (null) and this state (ExamplePersonUI).
-		// Using OnDeactivate is useful for clearing out Item slots and returning them to the player, as we do here.
 		public override void OnDeactivate()
 		{
 			if (!_vanillaItemSlot.Item.IsAir)
 			{
-				// QuickSpawnClonedItem will preserve mod data of the item. QuickSpawnItem will just spawn a fresh version of the item, losing the prefix.
 				Main.LocalPlayer.QuickSpawnClonedItem(_vanillaItemSlot.Item, _vanillaItemSlot.Item.stack);
-				// Now that we've spawned the item back onto the player, we reset the item by turning it into air.
 				_vanillaItemSlot.Item.TurnToAir();
 			}
-			// Note that in ExamplePerson we call .SetState(new UI.ExamplePersonUI());, thereby creating a new instance of this UIState each time. 
-			// You could go with a different design, keeping around the same UIState instance if you wanted. This would preserve the UIState between opening and closing. Up to you.
 		}
-
-		// Update is called on a UIState while it is the active state of the UserInterface.
-		// We use Update to handle automatically closing our UI when the player is no longer talking to our Example Person NPC.
 		public override void Update(GameTime gameTime)
 		{
-			// Don't delete this or the UIElements attached to this UIState will cease to function.
 			base.Update(gameTime);
-
-			// talkNPC is the index of the NPC the player is currently talking to. By checking talkNPC, we can tell when the player switches to another NPC or closes the NPC chat dialog.
 			if (Main.LocalPlayer.talkNPC == -1 || Main.npc[Main.LocalPlayer.talkNPC].type != NPCType<Clarissa>())
 			{
-				// When that happens, we can set the state of our UserInterface to null, thereby closing this UIState. This will trigger OnDeactivate above.
 				GetInstance<PoEBridgeMod>().ClarissaUserInterface.SetState(null);
 			}
 		}
@@ -72,23 +48,17 @@ namespace PoEBridgeMod.UI
 		{
 			base.DrawSelf(spriteBatch);
 
-			// This will hide the crafting menu similar to the reforge menu. For best results this UI is placed before "Vanilla: Inventory" to prevent 1 frame of the craft menu showing.
 			Main.HidePlayerCraftingMenu = true;
-
-			// Here we have a lot of code. This code is mainly adapted from the vanilla code for the reforge option.
-			// This code draws "Place an item here" when no item is in the slot and draws the reforge cost and a reforge button when an item is in the slot.
-			// This code could possibly be better as different UIElements that are added and removed, but that's not the main point of this example.
-			// If you are making a UI, add UIElements in OnInitialize that act on your ItemSlot or other inputs rather than the non-UIElement approach you see below.
 
 			const int slotX = 50;
 			const int slotY = 270;
-			if (!_vanillaItemSlot.Item.IsAir && !_gemItemSlot.Item.IsAir)
+			if (!_vanillaItemSlot.Item.IsAir)
 			{
-				int awesomePrice = Item.buyPrice(0, 1, 0, 0);
+				int identifyPrice = Item.buyPrice(0, 5, 0, 0);
 
 				string costText = Language.GetTextValue("LegacyInterface.46") + ": ";
 				string coinsText = "";
-				int[] coins = Utils.CoinsSplit(awesomePrice);
+				int[] coins = Utils.CoinsSplit(identifyPrice);
 				if (coins[3] > 0)
 				{
 					coinsText = coinsText + "[c/" + Colors.AlphaDarken(Colors.CoinPlatinum).Hex3() + ":" + coins[3] + " " + Language.GetTextValue("LegacyInterface.15") + "] ";
@@ -122,23 +92,21 @@ namespace PoEBridgeMod.UI
 					}
 					tickPlayed = true;
 					Main.LocalPlayer.mouseInterface = true;
-					if (Main.mouseLeftRelease && Main.mouseLeft && Main.LocalPlayer.CanBuyItem(awesomePrice, -1) && ItemLoader.PreReforge(_vanillaItemSlot.Item))
+					if (Main.mouseLeftRelease && Main.mouseLeft && Main.LocalPlayer.CanBuyItem(identifyPrice, -1) && ItemLoader.PreReforge(_vanillaItemSlot.Item))
 					{
-						Main.LocalPlayer.BuyItem(awesomePrice, -1);
+						Main.LocalPlayer.BuyItem(identifyPrice, -1);
 						bool favorited = _vanillaItemSlot.Item.favorited;
 						int stack = _vanillaItemSlot.Item.stack;
 						Item reforgeItem = new Item();
 						reforgeItem.netDefaults(_vanillaItemSlot.Item.netID);
+						Main.NewText(_vanillaItemSlot.Item.prefix);
 						reforgeItem = reforgeItem.CloneWithModdedDataFrom(_vanillaItemSlot.Item);
-						reforgeItem.Prefix(GetInstance<PoEBridgeMod>().PrefixType(_gemItemSlot.Item.modItem.GetType().Name));
+						reforgeItem.Prefix(GetInstance<PoEBridgeMod>().PrefixType("Sockets"));
 						_vanillaItemSlot.Item = reforgeItem.Clone();
 						_vanillaItemSlot.Item.position.X = Main.LocalPlayer.position.X + (float)(Main.LocalPlayer.width / 2) - (float)(_vanillaItemSlot.Item.width / 2);
 						_vanillaItemSlot.Item.position.Y = Main.LocalPlayer.position.Y + (float)(Main.LocalPlayer.height / 2) - (float)(_vanillaItemSlot.Item.height / 2);
 						_vanillaItemSlot.Item.favorited = favorited;
 						_vanillaItemSlot.Item.stack = stack;
-						ItemLoader.PostReforge(_vanillaItemSlot.Item);
-						ItemText.NewText(_vanillaItemSlot.Item, _vanillaItemSlot.Item.stack, true, false);
-						_gemItemSlot.Item.TurnToAir();
 						Main.PlaySound(SoundID.Item37, -1, -1);
 					}
 				}
@@ -147,16 +115,12 @@ namespace PoEBridgeMod.UI
 					tickPlayed = false;
 				}
 			}
-			if(_vanillaItemSlot.Item.IsAir)
+			if (_vanillaItemSlot.Item.IsAir)
 			{
 				string message = "Place item here";
 				ChatManager.DrawColorCodedStringWithShadow(Main.spriteBatch, Main.fontMouseText, message, new Vector2(slotX + 50, 280), new Color(Main.mouseTextColor, Main.mouseTextColor, Main.mouseTextColor, Main.mouseTextColor), 0f, Vector2.Zero, Vector2.One, -1f, 2f);
 			}
-			if (_gemItemSlot.Item.IsAir)
-			{
-				string message = "Place gem here";
-				ChatManager.DrawColorCodedStringWithShadow(Main.spriteBatch, Main.fontMouseText, message, new Vector2(slotX + 50, 340), new Color(Main.mouseTextColor, Main.mouseTextColor, Main.mouseTextColor, Main.mouseTextColor), 0f, Vector2.Zero, Vector2.One, -1f, 2f);
-			}
 		}
+
 	}
 }
