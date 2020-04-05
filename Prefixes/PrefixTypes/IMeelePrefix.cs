@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PoEBridgeMod.Prefixes
 {
-    public interface IRangePrefix
+    public interface IMeelePrefix
     {
 
     }

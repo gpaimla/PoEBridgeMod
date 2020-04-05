@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using PoEBridgeMod.Prefixes;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Terraria;
@@ -20,22 +21,13 @@ namespace PoEBridgeMod.Items
 		}
 
 		public override bool InstancePerEntity => true;
-
+		public bool didIShoot = false;
 		public override GlobalItem Clone(Item item, Item itemClone)
 		{
 			GemPrefixGlobalItem myClone = (GemPrefixGlobalItem)base.Clone(item, itemClone);
 			myClone.originalOwner = originalOwner;
 			myClone.prefixType = prefixType;
 			return myClone;
-		}
-
-		public override int ChoosePrefix(Item item, UnifiedRandom rand)
-		{
-			if ((item.accessory || item.damage > 0) && item.maxStack == 1 && rand.NextBool(30))
-			{
-				return mod.PrefixType(rand.Next(2) == 0 ? "Awesome" : "ReallyAwesome");
-			}
-			return -1;
 		}
 
 		public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
@@ -97,19 +89,85 @@ namespace PoEBridgeMod.Items
 
 		public override bool Shoot(Item item, Player player, ref Vector2 position, ref float speedX, ref float speedY, ref int type, ref int damage, ref float knockBack)
 		{
-			if(item.GetGlobalItem<GemPrefixGlobalItem>().prefixType != null)
+			// need to think what im gonna even do here, bows, easy to do
+			if (this.didIShoot)
 			{
-				if (this.mod.GetPrefix(prefixType) is IRangePrefix)
-				{
-					damage = 1000;
-				}
-				if (this.mod.GetPrefix(prefixType) is IMeelePrefix)
-				{
-					damage = 10000;
-				}
-
+				this.didIShoot = false;
+				return true; // false
 			}
+			if (item.GetGlobalItem<GemPrefixGlobalItem>().prefixType != null)
+			{
+				ModPrefix prefix = this.mod.GetPrefix(prefixType);
+				if (prefix is IRangePrefix irPrefix)
+				{
+					// irPrefix.CustomShoot(item, player, position, speedX, speedY, damage, knockBack);
+					return true; // false
+				}
+			}
+
 			return true;
 		}
+
+		public override bool CanUseItem(Item item, Player player)
+		{
+			// need to think what im gonna even do here, guns, need custom timer, clunky, hard
+			if (item.GetGlobalItem<GemPrefixGlobalItem>().prefixType != null)
+			{
+				ModPrefix prefix = this.mod.GetPrefix(prefixType);
+				if (prefix is IRangePrefix irPrefix)
+				{
+					// terraria source code for angles
+					if (item.useAmmo > 0)
+					{
+						bool canShoot = true;
+						int shoot = item.shoot;
+						float shootSpeed = item.shootSpeed;
+						int damage = item.damage;
+						float knockBack = item.knockBack;
+						player.PickAmmo(item, ref shoot, ref shootSpeed, ref canShoot, ref damage, ref knockBack, true);
+					}
+					float num75 = item.shootSpeed;
+					Vector2 vector2 = player.RotatedRelativePoint(player.MountedCenter, true);
+					float num81 = (float)Main.mouseX + Main.screenPosition.X - vector2.X;
+					float num82 = (float)Main.mouseY + Main.screenPosition.Y - vector2.Y;
+					if (player.gravDir == -1f)
+					{
+						num82 = Main.screenPosition.Y + (float)Main.screenHeight - (float)Main.mouseY - vector2.Y;
+					}
+					float num83 = (float)Math.Sqrt((double)(num81 * num81 + num82 * num82));
+					float num84 = num83;
+					if ((float.IsNaN(num81) && float.IsNaN(num82)) || (num81 == 0f && num82 == 0f))
+					{
+						num81 = (float)player.direction;
+						num82 = 0f;
+						num83 = num75;
+					}
+					else
+					{
+						num83 = num75 / num83;
+					}
+					float num151 = num81;
+					float num152 = num82;
+					float num153 = 0.05f * (float)3;
+					num151 += (float)Main.rand.Next(-35, 36) * num153;
+					num152 += (float)Main.rand.Next(-35, 36) * num153;
+					num83 = (float)Math.Sqrt((double)(num151 * num151 + num152 * num152));
+					num83 = num75 / num83;
+					num151 *= num83;
+					num152 *= num83;
+					float x4 = vector2.X;
+					float y4 = vector2.Y;
+					// irPrefix.CustomShoot(item, player, new Vector2(x4,y4), num151, num152, item.damage, item.knockBack);
+					this.didIShoot = true;
+				}
+				else
+				{
+					this.didIShoot = false;
+
+				}
+			}
+			return base.CanUseItem(item, player);
+		}
+
 	}
 }

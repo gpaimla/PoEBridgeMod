@@ -11,6 +11,9 @@ using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using PoEBridgeMod.Items;
+using PoEBridgeMod.Prefixes;
+using PoEBridgeMod.Prefixes.PrefixTypes;
 
 namespace PoEBridgeMod
 {
@@ -24,6 +27,18 @@ namespace PoEBridgeMod
 		public override void ResetEffects()
 		{
 			RighteousFire = false;
+		}
+		public override void OnHitNPCWithProj(Projectile proj, NPC target, int damage, float knockback, bool crit)
+		{
+			if(player.HeldItem.GetGlobalItem<GemPrefixGlobalItem>().prefixType != null)
+			{
+				ModPrefix prefix = this.mod.GetPrefix(player.HeldItem.GetGlobalItem<GemPrefixGlobalItem>().prefixType);
+				if (prefix is IProjOnHitPrefix iHPrefix)
+				{
+					iHPrefix.OnHitNPCWithProj(proj, target, damage, knockback, crit);
+				} 
+			}
+			base.OnHitNPCWithProj(proj, target, damage, knockback, crit);
 		}
 
 		public override void PreUpdate()
@@ -78,7 +93,6 @@ namespace PoEBridgeMod
 				}
 			}
 		}
-
 	}
 }
 
